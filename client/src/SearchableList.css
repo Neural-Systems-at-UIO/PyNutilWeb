@@ -34,6 +34,7 @@ flex: auto;
   padding: 0;
   overflow: auto;
   list-style: none;
+  max-height: 200px;
 }
 .undefined-content-item {
   display: flex;
@@ -59,5 +60,28 @@ flex: auto;
 }
 
 .undefined-checkbox {
-  visibility: hidden;
+  display: none;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: center;
+  padding: 8px;
+}
+
+
+.tableFixHead {
+  overflow-y: auto; /* make the table scrollable if height is more than 200 px  */
+  height: 200px; /* gives an initial height of 200px to the table */
+}
+.tableFixHead thead th {
+  position: sticky; /* make the table heads sticky */
+  background-color: #f2f2f2;
+
+  top: 0px; /* table head will be placed from the top of the table and sticks to it */
 }
