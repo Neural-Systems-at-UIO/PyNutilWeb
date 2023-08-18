@@ -27,6 +27,21 @@ const handlePointSettingChange = (value) => {
 
   return (
     <Space direction='horizontal'>
+        <Select
+        style={{ width: '250px' }}
+        placeholder="Select target atlas"
+        onChange={handlePointSettingChange}
+      >
+        <Option value="WHSv2">WHS Rat Brain Atlas v2 2015</Option>
+        <Option value="WHSv3">WHS Rat Brain Atlas v3 2019</Option>
+        <Option value="WHSv4">WHS Rat Brain Atlas v4 2021</Option>
+        <Option value="WHSv4.01">WHS Rat Brain Atlas v4.01 2023</Option>
+
+        <Option value="allen2015">Allen Mouse Brain CCFv3 2015</Option>
+        <Option value="allen2017">Allen Mouse Brain CCFv3 2017</Option>
+        <Option value="allen2022">Allen Mouse Brain CCFv3 2022</Option>
+
+      </Select>
       <Select
         style={{ width: '250px' }}
         placeholder="Select point calculation method"

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Transfer } from 'antd';
+import { Transfer, Button,message } from 'antd';
 import './SearchableList.css';
-import { LoadingOutlined , HistoryOutlined} from '@ant-design/icons';
+import { LoadingOutlined , HistoryOutlined, CheckCircleOutlined} from '@ant-design/icons';
 import { Spin , Tooltip,Popover} from 'antd';
 
 
@@ -42,29 +42,66 @@ const [selectedItem, setSelectedItem] = useState(null);
 
     return
   };
-const VersionsTable = ({ versions }) => {
+
+  const ButtonColumn = ({ title }) => {
+    const openMeshViewHandler = () => {
+      let meshviewUrl = "https://meshview.apps.hbp.eu/?atlas=ABA_Mouse_CCFv3_2017_25um&cloud=https://data-proxy.ebrains.eu/api/v1/buckets/"
+      meshviewUrl += props.bucketName
+      meshviewUrl += "/.nesysWorkflowFiles/pointClouds/"
+      meshviewUrl += title
+      meshviewUrl += "/objects_meshview.json"
+      navigator.clipboard.writeText(meshviewUrl)
+      message.success('Link copied to clipboard');
+
+    }
+    const openLocaliZoomHandler = () => {
+      let localizoomUrl = "https://lz-nl.apps.hbp.eu/collab.php?clb-collab-id="
+      localizoomUrl += props.bucketName
+      localizoomUrl += "&filename=.nesysWorkflowFiles/alignmentJsons/"
+      localizoomUrl += title
+      localizoomUrl += ".wwrp"
+      // copy link to clipboard
+      navigator.clipboard.writeText(localizoomUrl)
+      message.success('Link copied to clipboard');
+
+    }
+  
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <Button type="primary"onClick={openLocaliZoomHandler}>Copy LocaliZoom Link</Button>
+        <Button type="primary" onClick={openMeshViewHandler}>Copy MeshView Link</Button>
+        <Button type="primary">Download Analysis</Button>
+      </div>
+    );
+  };
+const VersionsTable = ({ versions, title }) => {
   return (
-    <div class="tableFixHead">
-      <table style={{ margin: 'auto' }}>
-        <caption style={{ fontWeight: 'bold' }}>Versions</caption>
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Minimum Object Size</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {versions.map((version) => (
-            <tr key={version.id}>
-              <td>{version.type}</td>
-              <td>{version.minObjectSize}</td>
-              <td>{version.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+    <ButtonColumn title={title} />
+    
+    
+    </>
+    // <div className="tableFixHead">
+    //   <table style={{ margin: 'auto' }}>
+    //     <caption style={{ fontWeight: 'bold' }}>{title} Versions</caption>
+    //     <thead>
+    //       <tr>
+    //         <th>Type</th>
+    //         <th>Minimum Object Size</th>
+    //         <th>Status</th>
+    //       </tr>
+    //     </thead>
+    //     <tbody>
+    //       {versions.map((version) => (
+    //         <tr key={version.id}>
+    //           <td>{version.type}</td>
+    //           <td>{version.minObjectSize}</td>
+    //           <td>{version.status}</td>
+    //         </tr>
+    //       ))}
+    //     </tbody>
+    //   </table>
+    // </div>
   );
 };
 const versionsData = [
@@ -130,20 +167,23 @@ const versionsData = [
   },
 ];
 
-  const itemRenderer = (item) => (
-    <Popover
-      placement='right'
-      trigger='click'
-      content={<VersionsTable versions={versionsData} />}
-    >
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        {item.isProcessing ? <Spin indicator={antIcon} style={{ marginRight: '10px'}} /> : null}
-        {item.title}
-          <HistoryOutlined style={{ marginLeft: '130px' }} />
-      </div>
-    </Popover>
-  );
-
+const itemRenderer = (item) => (
+  <Popover
+    placement='right'
+    trigger='click'
+    content={<VersionsTable versions={versionsData} title={item.title}/>}
+  >
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      {item.isProcessing ? (
+        <Spin indicator={antIcon} style={{ marginRight: '10px'}} />
+      ) : (
+       <CheckCircleOutlined style={{ marginRight: '10px', color: 'green' }} />
+      )}
+      {item.title}
+      <HistoryOutlined style={{ marginLeft: '130px' }} />
+    </div>
+  </Popover>
+);
 
   return (
     <Transfer.List
