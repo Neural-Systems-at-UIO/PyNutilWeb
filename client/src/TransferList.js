@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Transfer, Button,message } from 'antd';
+import { Transfer, Button } from 'antd';
 import './SearchableList.css';
 import { LoadingOutlined , HistoryOutlined, CheckCircleOutlined} from '@ant-design/icons';
 import { Spin , Tooltip,Popover} from 'antd';
@@ -50,9 +50,7 @@ const [selectedItem, setSelectedItem] = useState(null);
       meshviewUrl += "/.nesysWorkflowFiles/pointClouds/"
       meshviewUrl += title
       meshviewUrl += "/objects_meshview.json"
-      navigator.clipboard.writeText(meshviewUrl)
-      message.success('Link copied to clipboard');
-
+      window.open(meshviewUrl, "_blank")
     }
     const openLocaliZoomHandler = () => {
       let localizoomUrl = "https://lz-nl.apps.hbp.eu/collab.php?clb-collab-id="
@@ -60,16 +58,13 @@ const [selectedItem, setSelectedItem] = useState(null);
       localizoomUrl += "&filename=.nesysWorkflowFiles/alignmentJsons/"
       localizoomUrl += title
       localizoomUrl += ".wwrp"
-      // copy link to clipboard
-      navigator.clipboard.writeText(localizoomUrl)
-      message.success('Link copied to clipboard');
-
+      window.open(localizoomUrl, "_blank")
     }
   
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <Button type="primary"onClick={openLocaliZoomHandler}>Copy LocaliZoom Link</Button>
-        <Button type="primary" onClick={openMeshViewHandler}>Copy MeshView Link</Button>
+        <Button type="primary"onClick={openLocaliZoomHandler}>Open in LocaliZoom</Button>
+        <Button type="primary" onClick={openMeshViewHandler}>Open In MeshView</Button>
         <Button type="primary">Download Analysis</Button>
       </div>
     );

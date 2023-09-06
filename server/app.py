@@ -4,17 +4,28 @@ import os, requests
 from flask_cors import CORS
 from dotenv import load_dotenv
 from download_functions import download_brains
+from waitress import serve
+
 from datetime import datetime
-app = Flask(__name__)
+app = Flask(__name__, static_folder="../client/build", static_url_path="/")
 CORS(app)
 
+
 app.config["pynutil"] = None
-load_dotenv()
+if os.getenv("FLASK_ENV") == "development":
+    load_dotenv()
+
+# console log all of the env variables
+for key, value in os.environ.items():
+    print(f"{key}: {value}")
+    
 # In the future we will load all the Atlases here and store them in the app context
 # with app.app_context():
 #     app.config['pynutil'] = PyNutil.PyNutil(
 
 #     )
+
+
 
 
 def get_token(code):
@@ -51,9 +62,7 @@ def auth():
 
 @app.route("/")
 def index():
-    if os.environ.get("FLASK_ENV") == "development":
-        # redirect to the react dev server at localhost:3000
-        return redirect("http://localhost:3000")
+    return app.send_static_file("index.html")
 
 
 @app.route("/list_bucket_content", methods=["POST"])
@@ -126,6 +135,7 @@ def process_brains():
     print(f"brains: {brains}")
     print(f"bucket_name: {bucket_name}")
     return "ok"
+
 def get_upload_link(bucket_name, save_path, token):
     request_url = f"https://data-proxy.ebrains.eu/api/v1/buckets/{bucket_name}/{save_path}"
     headers = {"Authorization": token, "Content-Type": "application/json", 'x-amz-date': datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')}
@@ -150,14 +160,20 @@ def upload_file_to_bucket(bucket_name, file_path, save_path, token):
     return response
 
 
-import axios
 
 
 # download ilastik files and waln
 @app.route("/test_route/<username>")
 def test_route(username):
     return f"Hello {username}"
+import ssl
 
-
+print("FLASK_ENV: ", os.getenv("FLASK_ENV"))
+# if __name__ == "__main__":
+#     app.run(debug=True)
 if __name__ == "__main__":
-    app.run(debug=True)
+    if os.getenv("FLASK_ENV") == "development":
+        # set port to 8080
+        app.run(debug=True,ssl_context='adhoc',  port=8080)
+    else:
+        serve(app, host="0.0.0.0", port=8080)

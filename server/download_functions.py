@@ -19,6 +19,8 @@ def unzip_file(file_path, destination_path):
 
 def download_brain_files(bucket_name, brain):
     brain_files_url = f"https://data-proxy.ebrains.eu/api/v1/buckets/{bucket_name}?prefix=.nesysWorkflowFiles/ilastikOutputs/{brain}/"
+    brain_files_url = f"https://data-proxy.ebrains.eu/api/v1/buckets/{bucket_name}?prefix=.nesysWorkflowFiles/ilastikOutputs"
+
     response = requests.get(brain_files_url)
     if response.ok:
         brain_files = response.json()['objects']
@@ -27,6 +29,7 @@ def download_brain_files(bucket_name, brain):
             if file_name.endswith('.dzip'):
                 path_removed = os.path.basename(file_name)
                 file_url = f"https://data-proxy.ebrains.eu/api/v1/buckets/{bucket_name}/{file_name}?redirect=false"
+                print(f"file_url: {file_url}")
                 redirected_reponse = requests.get(file_url)
                 if redirected_reponse.ok:
                     redirected_url = redirected_reponse.json()['url']

@@ -35,7 +35,7 @@ function App() {
   useEffect(() => {
     let queryParameters = new URLSearchParams(window.location.search)
     console.log('Current URL:', window.location.href);
-
+    console.log('env variables accessible', process.env)
     let temp_bucket_name = queryParameters.get('state')
     // convert temp_bucket_name to json
     temp_bucket_name = JSON.parse(temp_bucket_name)
@@ -125,7 +125,8 @@ function App() {
     setProcessedDataSource(processedDataSource => [...processedDataSource, ...newProcessedDataSource]);
     setTargetKeys([]);
     const brains = newProcessedDataSource.map(obj => obj.title).join(',');
-    let url = `http://localhost:5000/process_brains?brains=${brains}&pointPerObject=${pointPerObject}&pointPerPixel=${pointPerPixel}&minObjectSize=${minObjectSize}&clb-collab-id=${bucketName}`
+    let oidc_redirect_uri = process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL;
+    let url = `${oidc_redirect_uri}/process_brains?brains=${brains}&pointPerObject=${pointPerObject}&pointPerPixel=${pointPerPixel}&minObjectSize=${minObjectSize}&clb-collab-id=${bucketName}`
     console.log(url)
     fetch(url, {
       method: 'GET',

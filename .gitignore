@@ -1,3 +1,6 @@
 node_modules
 server/permanent_storage
 server/PyNutil
+.env.production
+client/.env.production
+client/.env.local
