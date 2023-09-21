@@ -57,7 +57,7 @@ const [selectedItem, setSelectedItem] = useState(null);
       localizoomUrl += props.bucketName
       localizoomUrl += "&filename=.nesysWorkflowFiles/alignmentJsons/"
       localizoomUrl += title
-      localizoomUrl += ".wwrp"
+      localizoomUrl += ".waln"
       window.open(localizoomUrl, "_blank")
     }
   
@@ -181,7 +181,11 @@ const itemRenderer = (item) => (
 );
 
   return (
-    <Transfer.List
+    <>
+    {/* add text above the list */}
+    <h2 style={{ textAlign: 'center' }}>Processed Brains</h2>
+
+        <Transfer.List
       checkedKeys={[]}
       dataSource={props.processedDataSource}
       showSearch
@@ -190,7 +194,7 @@ const itemRenderer = (item) => (
       searchPlaceholder='Search brains'
       itemUnit='brains'
       itemsUnit='brains'
-      titleText='Processed brains'
+      // titleText='Processed brains'
       style={transferListStyle}
       selectedItem={selectedItem}
       className='transferListCustom'
@@ -199,5 +203,7 @@ const itemRenderer = (item) => (
       handleFilter={handleFilter}
       handleClear={handleClear}
     />
+    </>
+
   );
 }

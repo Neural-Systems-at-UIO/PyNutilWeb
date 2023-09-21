@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
-import { Select, InputNumber ,Space} from 'antd';
+import { Select, InputNumber ,Space, Checkbox} from 'antd';
 
 const { Option } = Select;
 
 function OptionsMenu(props) {
 
 const handlePointSettingChange = (value) => {
-    if (value==='pointPerObject') {
-            props.setPointPerObject(false);
-            props.setPointPerPixel(true);
-    } else if (value==='pointPerPixel') {
-            props.setPointPerObject(true);
-            props.setPointPerPixel(false);
-    } else if (value==='both') {
-            props.setPointPerObject(true);
-            props.setPointPerPixel(true);
-    }
+  console.log('point setting change', value)
+  if (value.includes('pointPerObject')) {
+    props.setPointPerObject(true);
+  } else {
+    props.setPointPerObject(false);
+  }
+  
+  if (value.includes('pointPerPixel')) {
+    props.setPointPerPixel(true);
+  } else {
+    props.setPointPerPixel(false);
+  }
 };
-
 
 
   const handleMinObjectSizeChange = (value) => {
@@ -25,12 +26,20 @@ const handlePointSettingChange = (value) => {
 
   };
 
+  const handleTargetAtlasChange = (value) => {
+    props.setTargetAtlas(value);
+  };
+
   return (
-    <Space direction='horizontal'>
-        <Select
-        style={{ width: '250px' }}
+    <Space direction='vertical'>
+      <div style={{width:'40rem', display:'flex', flexDirection:'row'}}>
+      <div style={{width:'15rem'}}>
+      <span >Target atlas:</span>
+      </div>        <Select
+        style={{width:'20rem', marginLeft:'0.5rem'}}
         placeholder="Select target atlas"
-        onChange={handlePointSettingChange}
+        onChange={handleTargetAtlasChange}
+        
       >
         <Option value="WHSv2">WHS Rat Brain Atlas v2 2015</Option>
         <Option value="WHSv3">WHS Rat Brain Atlas v3 2019</Option>
@@ -42,21 +51,29 @@ const handlePointSettingChange = (value) => {
         <Option value="allen2022">Allen Mouse Brain CCFv3 2022</Option>
 
       </Select>
-      <Select
-        style={{ width: '250px' }}
-        placeholder="Select point calculation method"
+      </div>
+      <div style={{width:'40rem', display:'flex', flexDirection:'row'}}>
+        <div style={{width:'15rem'}}>
+      <span >Point Calculation Method:</span>
+      </div>
+      <div>
+      <Checkbox.Group
+        style={{ marginLeft: '0.5rem' }}
+        options={[
+          { label: 'Point per pixel', value: 'pointPerPixel' },
+          { label: 'Point per object', value: 'pointPerObject' }
+        ]}
         onChange={handlePointSettingChange}
-      >
-        <Option value="pointPerPixel">Point per pixel</Option>
-
-        <Option value="pointPerObject">Point per object</Option>
-        <Option value="both">Both</Option>
-      </Select>
+      />
+    </div>
+      </div>
       
         <div>
           <span>Minimum object size (px):</span>
           <InputNumber
-            disabled={props.pointPerPixel === false}
+                  style={{ marginLeft: '4.1rem' }}
+
+            disabled={props.pointPerObject === false}
             min={0}
             defaultValue={0}
             onChange={handleMinObjectSizeChange}

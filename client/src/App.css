@@ -4,3 +4,8 @@
   align-items: center;
   height: 100vh;
 }
+
+.ant-space-item {
+  /* inherit width from parent */
+  /* width: inherit; */
+}

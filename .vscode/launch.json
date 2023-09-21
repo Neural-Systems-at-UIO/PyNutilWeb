@@ -7,21 +7,23 @@
             "request": "launch",
             "module": "flask",
             "env": {
-                "FLASK_APP": "server/app.py",
-                "FLASK_ENV": "development"
-            },
+                "FLASK_APP": "app.py",
+                "FLASK_ENV": "development"            },
             "args": [
                 "run",
                 "--no-debugger",
-                "--no-reload"
+                "--debug",
+                "--port=8080",
+                "--cert=adhoc"
             ],
-            "jinja": true
-        },
+            "jinja": true,
+            "python": "/home/harryc/miniconda3/envs/nutilFlask/bin/python" ,
+        "cwd": "${workspaceFolder}/server"       },
         {
             "name": "Chrome",
             "type": "chrome",
             "request": "launch",
-            "url": "http://localhost:5000",
+            "url": "https://localhost:8080",
             "webRoot": "${workspaceFolder}/client/src",
             "sourceMapPathOverrides": {
                 "webpack:///src/*": "${webRoot}/*"

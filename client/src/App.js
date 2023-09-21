@@ -29,6 +29,7 @@ function App() {
   const [pointPerPixel, setPointPerPixel] = useState(false);
   const [minObjectSize, setMinObjectSize] = useState(0);
   const [targetKeys, setTargetKeys] = useState([]);
+  const [targetAtlas, setTargetAtlas] = useState('');
   const [processedDataSource, setProcessedDataSource] = useState([]);
   const [bucketName, setBucketName] = useState('')
   const isButtonDisabled = targetKeys.length === 0 || (!pointPerObject && !pointPerPixel);
@@ -56,40 +57,55 @@ function App() {
       return
     }
     console.log('bucketName: ', bucketName)
-    let data = ListBucketObjects(bucketName, '.nesysWorkflowFiles/alignmentJsons/')
-    data.then(
-      (result) => {
-        let files = result.objects.map((file) => {
-          file.name = file.name.replace('.waln', '')
-          // remove path from name
-          file.name = file.name.replace('.nesysWorkflowFiles/alignmentJsons/', '')
-          return file
+    let data1 = ListBucketObjects(bucketName, '.nesysWorkflowFiles/alignmentJsons/')
+    let data2 = ListBucketObjects(bucketName, '.nesysWorkflowFiles/ilastikOutputs/')
 
-          // exclude empty files
-          // if (file.name !== '') {
-          //   return file
-          // }
-        })
-        // remove empty files
-        files = files.filter((file) => {
-          if (file.name !== '') {
-            return file
-          }
-        })
+    Promise.all([data1, data2]).then(([result1, result2]) => {
+      let files1 = result1.objects.map((file) => {
+        // if name in file
+        if (file.subdir) {
+          file.name = file.subdir
+        }
+        file.name = file.name.replace('.waln', '')
+        // remove path from name
+        file.name = file.name.replace('.nesysWorkflowFiles/alignmentJsons/', '')
+        file.name = file.name.replace('/', '')
 
-        let tempDataSource = files.map((file, index) => {
-          return {
-            key: index + 1,
-            title: file.name,
-            description: file.name,
-            chosen: false
-          }
-        })
-        setDataSource(tempDataSource)
+        return file.name
+      })
 
+      let files2 = result2.objects.map((file) => {
+        // if name in file
+        if (file.subdir) {
+          file.name = file.subdir
+        }
+        file.name = file.name.replace('.waln', '')
+        // remove path from name
+        file.name = file.name.replace('.nesysWorkflowFiles/ilastikOutputs/', '')
+        file.name = file.name.replace('/', '')
 
+        return file.name
+      })
+
+      // Find the common files between the two lists
+      let commonFiles = files1.filter((file) => files2.includes(file))
+      // remove empty files
+      commonFiles = commonFiles.filter((file) => {
+      if (file.name !== '') {
+        return file
       }
-    )
+    })
+
+      let tempDataSource = commonFiles.map((file, index) => {
+        return {
+          key: index + 1,
+          title: file,
+          description: file,
+          chosen: false
+        }
+      })
+      setDataSource(tempDataSource)
+    })
   }, [bucketName])
 
   function handleTokenReceived(token) {
@@ -126,7 +142,7 @@ function App() {
     setTargetKeys([]);
     const brains = newProcessedDataSource.map(obj => obj.title).join(',');
     let oidc_redirect_uri = process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL;
-    let url = `${oidc_redirect_uri}/process_brains?brains=${brains}&pointPerObject=${pointPerObject}&pointPerPixel=${pointPerPixel}&minObjectSize=${minObjectSize}&clb-collab-id=${bucketName}`
+    let url = `${oidc_redirect_uri}/process_brains?brains=${brains}&pointPerObject=${pointPerObject}&pointPerPixel=${pointPerPixel}&minObjectSize=${minObjectSize}&targetAtlas=${targetAtlas}&clb-collab-id=${bucketName}`
     console.log(url)
     fetch(url, {
       method: 'GET',
@@ -134,6 +150,7 @@ function App() {
         'Authorization': `${token}`
       }
       })
+      .catch(error => console.error(error));
 
   }
   React.useEffect(() => {
@@ -149,6 +166,7 @@ function App() {
         console.log('token: ', token)
         setLoading(false)
       })
+      .catch(error => console.error(error));
   }, [])
 
   if (loading) {
@@ -162,7 +180,16 @@ function App() {
         <header className="App-header"></header>
         <div className="center">
           <Space direction="vertical" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <Space direction='horizontal' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+
+            <Space direction='horizontal' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' ,  width:'100%' }}>
+            <div  style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' ,  width:'100%', flexDirection:"column"  }}>
+            {/* <Space direction='horizontal' id='column-headers' style={{ display: 'flex',  width:'100%'}}> */}
+            <div style={{ display: 'flex', flexDirection: 'row', width:'100%'}}>
+         
+            <h2 style={{width:'100%',textAlign: 'center', left:0}}>Available Brains</h2>
+            <h2 style={{width:'100%',textAlign: 'center'}}>Brains to Process</h2>
+            </div>
+            {/* </Space> */}
               <Transfer
                 dataSource={dataSource}
                 targetKeys={targetKeys}
@@ -170,25 +197,30 @@ function App() {
                 render={item => item.title}
                 listStyle={{ width: '45%', height: 300 }}
                 locale={{ itemUnit: 'brains', itemsUnit: 'brains', searchPlaceholder: 'Search brains' }}
-                titles={['Available Brains', 'Brains to Process']}
+                // titles={['Available Brains', 'Brains to Process']}
                 onChange={onChange}
               />
+                            </div>
+
               <TransferList
                 processedDataSource={processedDataSource}
                 bucketName={bucketName}
               />
             </Space>
+            <div style={{display:'flex', width:'49rem',flexDirection:'column', alignItems:'center', backgroundColor:'#F9F6EE',  border: '2px solid black' , gap: '1rem', borderRadius: '10px', padding:'1rem'}}>
+              <h2 style={{margin:0}}>Settings</h2>
             <OptionsMenu
               setMinObjectSize={setMinObjectSize}
               setPointPerObject={setPointPerObject}
               setPointPerPixel={setPointPerPixel}
-              pointPerPixel={pointPerPixel}
+              pointPerObject={pointPerObject}
+              setTargetAtlas={setTargetAtlas}
             />
             <Space>
               {isButtonDisabled ? (
                 <Tooltip placement="bottom" title="You must have brains in the 'Brains to process' menu and a point calculation method selected before proceeding" >
                   <span style={{ marginLeft: '8px' }}>
-                    <Button type="primary" disabled={isButtonDisabled}>
+                    <Button type="primary" disabled={isButtonDisabled} size='large'>
                       Process Brains
                     </Button>
                   </span>
@@ -199,6 +231,7 @@ function App() {
                 </Button>
               )}
             </Space>
+            </div>
           </Space>
         </div>
       </div>

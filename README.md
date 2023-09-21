@@ -1,3 +1,5 @@
+start the flask server:
+FLASK_APP=app.py FLASK_ENV=development flask --debug run --port=8080 --cert=adhoc
 Welcome to my-react-flask-app!
 
 This is a project structure for a React app with a Flask backend. The project is organized into two main directories: `client` and `server`.

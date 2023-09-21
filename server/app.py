@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, redirect, request, abort
+from flask import Flask, jsonify, render_template, redirect, request, abort,url_for
 from PyNutil import PyNutil
 import os, requests
 from flask_cors import CORS
@@ -62,7 +62,14 @@ def auth():
 
 @app.route("/")
 def index():
-    return app.send_static_file("index.html")
+
+    if os.getenv("FLASK_ENV") == "development":
+        query_params = request.query_string.decode("utf-8")
+        print
+        redirect_url = f"http://localhost:3000?{query_params}"
+        return redirect(redirect_url)
+    else:
+        return app.send_static_file("index.html")
 
 
 @app.route("/list_bucket_content", methods=["POST"])

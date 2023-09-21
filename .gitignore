@@ -4,3 +4,4 @@ server/PyNutil
 .env.production
 client/.env.production
 client/.env.local
+client/src/generate_ng_neurons.py
