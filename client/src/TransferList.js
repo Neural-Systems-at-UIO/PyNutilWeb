@@ -17,14 +17,16 @@ export default function TransferList(props) {
 const transferListStyle = {
   display: 'flex',
   flexDirection: 'column',
-  height: '300px',
+  height: '400px',
+  width:'20rem',
   border: '1px solid #d9d9d9',
   borderRadius: '8px',
   boxSizing: 'border-box',
   fontSize: '14px',
   lineHeight: '1.5714285714285714',
   listStyle: 'none',
-  maxHeight: '300px',
+  maxHeight: '400px',
+  marginLeft: '1.5rem',
   // overflow: 'auto',
   fontFamily: '-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,\'Helvetica Neue\',Arial,\'Noto Sans\',sans-serif,\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Segoe UI Symbol\',\'Noto Color Emoji\'',
 };

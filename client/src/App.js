@@ -61,6 +61,8 @@ function App() {
     let data2 = ListBucketObjects(bucketName, '.nesysWorkflowFiles/ilastikOutputs/')
 
     Promise.all([data1, data2]).then(([result1, result2]) => {
+      // remove all files from file1 that do not end in waln
+      result1.objects = result1.objects.filter((file) => file.name.endsWith('.waln'))
       let files1 = result1.objects.map((file) => {
         // if name in file
         if (file.subdir) {
@@ -87,23 +89,33 @@ function App() {
         return file.name
       })
 
-      // Find the common files between the two lists
-      let commonFiles = files1.filter((file) => files2.includes(file))
-      // remove empty files
-      commonFiles = commonFiles.filter((file) => {
-      if (file.name !== '') {
-        return file
-      }
-    })
+      // filter empty strings from both
+      files1 = files1.filter((file) => file !== '')
+      files2 = files2.filter((file) => file !== '')
+    
 
-      let tempDataSource = commonFiles.map((file, index) => {
+      let tempDataSource = files1.map((file, index) => {
+    
+        if (files2.includes(file)) {
         return {
           key: index + 1,
           title: file,
           description: file,
-          chosen: false
+          disabled: false,
+          chosen: false,
         }
+      }
+      else {
+        return {
+          key: index + 1,
+          title: file,
+          description: file,
+          disabled: true,
+          chosen: false,
+        }
+      }
       })
+
       setDataSource(tempDataSource)
     })
   }, [bucketName])
@@ -153,6 +165,15 @@ function App() {
       .catch(error => console.error(error));
 
   }
+  const openLocaliZoomHandler = (title) => {
+    let localizoomUrl = "https://lz-nl.apps.hbp.eu/collab.php?clb-collab-id="
+    localizoomUrl += bucketName
+    localizoomUrl += "&filename=.nesysWorkflowFiles/alignmentJsons/"
+    localizoomUrl += title
+    localizoomUrl += ".waln"
+    window.open(localizoomUrl, "_blank")
+  }
+
   React.useEffect(() => {
     // console.log('useEffect')
     // only authenticate if we are not already authenticated
@@ -174,6 +195,8 @@ function App() {
       <Loading />
     )
   }
+
+  
   else {
     return (
       <div className="App">
@@ -194,11 +217,27 @@ function App() {
                 dataSource={dataSource}
                 targetKeys={targetKeys}
                 showSearch
-                render={item => item.title}
-                listStyle={{ width: '45%', height: 300 }}
+                render={item => (
+                  <div>
+                    {item.disabled && <>
+                      <Tooltip  placement="left" title="This item is disabled for pyNutil since it doesn't have an associated segmentation from webIlastik. You can still open it in the viewer.">
+                    <span>{item.title}</span>
+                    </Tooltip>
+                    </>
+                    }
+                    {!item.disabled && <>
+                      <span>{item.title}</span>
+
+                    </>}
+                    <Button  size="small" style={{ float: 'right' }} onClick={e => { e.stopPropagation(); openLocaliZoomHandler(item.title) }}>LocaliZoom</Button>
+
+
+                  </div>
+                )}                listStyle={{ width: '20rem', height: 400 }}
                 locale={{ itemUnit: 'brains', itemsUnit: 'brains', searchPlaceholder: 'Search brains' }}
                 // titles={['Available Brains', 'Brains to Process']}
                 onChange={onChange}
+
               />
                             </div>
 
@@ -207,7 +246,7 @@ function App() {
                 bucketName={bucketName}
               />
             </Space>
-            <div style={{display:'flex', width:'49rem',flexDirection:'column', alignItems:'center', backgroundColor:'#F9F6EE',  border: '2px solid black' , gap: '1rem', borderRadius: '10px', padding:'1rem'}}>
+            <div style={{display:'flex', width:'62.5rem',flexDirection:'column', alignItems:'center', backgroundColor:'#F9F6EE',  border: '2px solid black' , gap: '1rem', borderRadius: '10px', padding:'1rem'}}>
               <h2 style={{margin:0}}>Settings</h2>
             <OptionsMenu
               setMinObjectSize={setMinObjectSize}
