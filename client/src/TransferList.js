@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Transfer, Button } from 'antd';
 import './SearchableList.css';
-import { LoadingOutlined , HistoryOutlined, CheckCircleOutlined} from '@ant-design/icons';
+import { LoadingOutlined , HistoryOutlined, CheckCircleOutlined, DownloadOutlined} from '@ant-design/icons';
 import { Spin , Tooltip,Popover} from 'antd';
 
 
@@ -18,12 +18,12 @@ const transferListStyle = {
   display: 'flex',
   flexDirection: 'column',
   height: '400px',
-  width:'20rem',
+  width:'30rem',
   border: '1px solid #d9d9d9',
   borderRadius: '8px',
   boxSizing: 'border-box',
   fontSize: '14px',
-  lineHeight: '1.5714285714285714',
+  lineHeight: '2rem',
   listStyle: 'none',
   maxHeight: '400px',
   marginLeft: '1.5rem',
@@ -46,14 +46,7 @@ const [selectedItem, setSelectedItem] = useState(null);
   };
 
   const ButtonColumn = ({ title }) => {
-    const openMeshViewHandler = () => {
-      let meshviewUrl = "https://meshview.apps.hbp.eu/?atlas=ABA_Mouse_CCFv3_2017_25um&cloud=https://data-proxy.ebrains.eu/api/v1/buckets/"
-      meshviewUrl += props.bucketName
-      meshviewUrl += "/.nesysWorkflowFiles/pointClouds/"
-      meshviewUrl += title
-      meshviewUrl += "/objects_meshview.json"
-      window.open(meshviewUrl, "_blank")
-    }
+
     const openLocaliZoomHandler = () => {
       let localizoomUrl = "https://lz-nl.apps.hbp.eu/collab.php?clb-collab-id="
       localizoomUrl += props.bucketName
@@ -66,7 +59,6 @@ const [selectedItem, setSelectedItem] = useState(null);
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <Button type="primary"onClick={openLocaliZoomHandler}>Open in LocaliZoom</Button>
-        <Button type="primary" onClick={openMeshViewHandler}>Open In MeshView</Button>
         <Button type="primary">Download Analysis</Button>
       </div>
     );
@@ -163,23 +155,38 @@ const versionsData = [
     status: 'Active',
   },
 ];
-
+const openMeshViewHandler = (title) => {
+  let meshviewUrl = "https://meshview.apps.hbp.eu/?atlas=ABA_Mouse_CCFv3_2017_25um&cloud=https://data-proxy.ebrains.eu/api/v1/buckets/"
+  meshviewUrl += props.bucketName
+  meshviewUrl += "/.nesysWorkflowFiles/pointClouds/"
+  meshviewUrl += title
+  meshviewUrl += "/objects_meshview.json"
+  window.open(meshviewUrl, "_blank")
+}
 const itemRenderer = (item) => (
-  <Popover
-    placement='right'
-    trigger='click'
-    content={<VersionsTable versions={versionsData} title={item.title}/>}
-  >
-    <div style={{ display: 'flex', alignItems: 'center' }}>
+  <>
+    <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
       {item.isProcessing ? (
-        <Spin indicator={antIcon} style={{ marginRight: '10px'}} />
+        <Spin indicator={antIcon} style={{ marginRight: '10px' }} />
       ) : (
-       <CheckCircleOutlined style={{ marginRight: '10px', color: 'green' }} />
+        <CheckCircleOutlined style={{ marginRight: '10px', color: 'green' }} />
       )}
+      <div style={{marginRight:'10px'}}>
       {item.title}
-      <HistoryOutlined style={{ marginLeft: '130px' }} />
+      </div>
+      <div style={{ fontWeight: 'bold', marginRight: '10px', minWidth: '2rem'}}>{item.method}</div>
+      <div style={{ marginRight: '10px', minWidth: '2rem'}}>{item.minObjectSize}</div>
+      <div style={{ fontWeight: 'bold', marginRight: '10px', minWidth: '2rem'}}>{item.atlas}</div>
+
+      <div style={{ position: 'absolute', right: 0 }}>
+        <Button size="small" style={{ marginRight: '10px' }} onClick={() => openMeshViewHandler(item.title)}>MeshView</Button>
+        {/* <Popover placement='right' trigger='click' content={<VersionsTable versions={versionsData} title={item.title}/>}> */}
+        <Button size="small" style={{ marginRight: '10px' }} icon={<DownloadOutlined />}></Button>
+        {/* </Popover> */}
+
+      </div>
     </div>
-  </Popover>
+  </>
 );
 
   return (
@@ -196,7 +203,6 @@ const itemRenderer = (item) => (
       searchPlaceholder='Search brains'
       itemUnit='brains'
       itemsUnit='brains'
-      // titleText='Processed brains'
       style={transferListStyle}
       selectedItem={selectedItem}
       className='transferListCustom'

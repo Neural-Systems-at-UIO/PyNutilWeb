@@ -149,10 +149,47 @@ function App() {
   };
 
   const onClick = () => {
-    const newProcessedDataSource = targetKeys.map(key => dataSource[parseInt(key) - 1]);
+    let newProcessedDataSource = [];
+    if (pointPerPixel) {
+      let PPPDataSource = targetKeys.map(key => dataSource[parseInt(key) - 1]);
+      PPPDataSource= PPPDataSource.map(obj => {
+        return {
+          key: obj.key,
+          title: obj.title,
+          description: obj.description,
+          method: 'PPP',
+          minObjectSize: '',
+          status: 'queued',
+          atlas: targetAtlas
+        }
+      })
+      newProcessedDataSource = [...newProcessedDataSource, ...PPPDataSource];
+    }
+    if (pointPerObject) {
+      let PPODataSource = targetKeys.map(key => dataSource[parseInt(key) - 1]);
+      PPODataSource = PPODataSource.map(obj => {
+        return {
+          // add 99000 to key to differentiate from PPP
+          key: obj.key + 99000,
+          title: obj.title,
+          description: obj.description,
+          method: 'PPO',
+          minObjectSize: minObjectSize,
+          status: 'queued',
+          atlas: targetAtlas
+        }
+      })
+      newProcessedDataSource = [...newProcessedDataSource, ...PPODataSource];
+
+    }
+
+    
+    
     setProcessedDataSource(processedDataSource => [...processedDataSource, ...newProcessedDataSource]);
     setTargetKeys([]);
-    const brains = newProcessedDataSource.map(obj => obj.title).join(',');
+    let brains = newProcessedDataSource.map(obj => obj.title).join(',');
+    // remove duplicates
+    brains = [...new Set(brains.split(','))].join(',')
     let oidc_redirect_uri = process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL;
     let url = `${oidc_redirect_uri}/process_brains?brains=${brains}&pointPerObject=${pointPerObject}&pointPerPixel=${pointPerPixel}&minObjectSize=${minObjectSize}&targetAtlas=${targetAtlas}&clb-collab-id=${bucketName}`
     console.log(url)
@@ -246,7 +283,7 @@ function App() {
                 bucketName={bucketName}
               />
             </Space>
-            <div style={{display:'flex', width:'62.5rem',flexDirection:'column', alignItems:'center', backgroundColor:'#F9F6EE',  border: '2px solid black' , gap: '1rem', borderRadius: '10px', padding:'1rem'}}>
+            <div style={{display:'flex', width:'72.5rem',flexDirection:'column', alignItems:'center', backgroundColor:'#F9F6EE',  border: '2px solid black' , gap: '1rem', borderRadius: '10px', padding:'1rem'}}>
               <h2 style={{margin:0}}>Settings</h2>
             <OptionsMenu
               setMinObjectSize={setMinObjectSize}

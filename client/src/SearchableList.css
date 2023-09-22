@@ -34,7 +34,7 @@ flex: auto;
   padding: 0;
   overflow: auto;
   list-style: none;
-  max-height: 200px;
+  max-height: 300px;
 }
 .undefined-content-item {
   display: flex;

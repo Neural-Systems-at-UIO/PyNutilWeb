@@ -84,7 +84,6 @@ def list_bucket_content():
         return response
 
 
-
 @app.route("/process_brains", methods=["GET"])
 def process_brains():
     bucket_name = request.args.get("clb-collab-id")
@@ -111,7 +110,7 @@ def process_brains():
         method = "per_pixel"
     elif point_per_object and point_per_pixel:
         method = "all"
-
+    print(f"brains: {brains}")
     for brain in brains:
         pnt.segmentation_folder = f"permanent_storage/{bucket_name}/{brain}/"
         pnt.alignment_json = f"permanent_storage/{bucket_name}/{brain}/{brain}.waln"
@@ -126,14 +125,13 @@ def process_brains():
         target_folder = f".nesysWorkflowFiles/Quantification/{brain}/counts.csv"
         file_path = f"permanent_storage/{bucket_name}/{brain}/whole_series_report/counts.csv"
         upload_file_to_bucket(bucket_name,  file_path, target_folder,token)
-
-
         target_folder = f".nesysWorkflowFiles/alignmentJsons/{brain}.json"
 
         file_path = f"permanent_storage/{bucket_name}/{brain}/{brain}.json"
         upload_file_to_bucket(bucket_name,  file_path, target_folder,token)
-
-        
+        delete_path = f"permanent_storage/{bucket_name}/{brain}/segmentations"
+        os.system(f"rm -rf {delete_path}")
+    
     # upload results to bucket
 
     print(f"point_per_object: {point_per_object}")
