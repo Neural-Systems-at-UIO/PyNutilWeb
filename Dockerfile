@@ -39,5 +39,7 @@ EXPOSE 8080
 # Set the working directory to /app/client
 WORKDIR /app/server
 
+#set the permissions on app/server/permanent_storage to drwxrwxrwx
+RUN chmod 777 permanent_storage
 # Run app.py when the container launches
 CMD ["python", "app.py"]
