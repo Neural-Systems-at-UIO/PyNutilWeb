@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Space, Transfer, Button, Tooltip, Spin } from 'antd';
+import { Space, Transfer, Button, Tooltip, Spin, Popover} from 'antd';
 import OptionsMenu from './OptionsMenu';
 import TransferList from './TransferList';
 import './App.css';
@@ -202,6 +202,56 @@ function App() {
       .catch(error => console.error(error));
 
   }
+  
+
+
+const ItemRenderer = ({ item }) => {
+  const content = (
+    <div style={{display:'flex', flexDirection:'column', gap:'0.5rem' }}>
+      <Button onClick={
+        (e) => {
+          e.stopPropagation();
+
+          openLocaliZoomHandler(item.title)
+        }
+      } >Atlas Overlay</Button>
+      <Button onClick={
+        (e) => {
+          e.stopPropagation();
+          openMioViewer(item.title)
+        }
+      }>Images Only</Button>
+    </div>
+  );
+  const renderDisabledItem = () => (
+    <Tooltip placement="left" title="This item is disabled for pyNutil since it doesn't have an associated segmentation from webIlastik. You can still open it in the viewer.">
+      <span>{item.title}</span>
+    </Tooltip>
+  );
+
+  const renderEnabledItem = () => (
+    <>
+    <span>{item.title}</span>
+
+
+
+  
+    </>
+  )
+  return (
+    <div>
+      {item.disabled ? renderDisabledItem() : renderEnabledItem()}
+      <Popover
+      content={content}
+      trigger="click"
+      placement="right">
+                    <Button  size="small" style={{ float: 'right' }} onClick={e => { e.stopPropagation(); }}>Shareable Link</Button>
+      </Popover>
+
+    </div>
+  );
+};
+
   const openLocaliZoomHandler = (title) => {
     let localizoomUrl = "https://lz-nl.apps.hbp.eu/collab.php?clb-collab-id="
     localizoomUrl += bucketName
@@ -210,6 +260,15 @@ function App() {
     localizoomUrl += ".waln"
     window.open(localizoomUrl, "_blank")
   }
+  const openMioViewer = (title) => {
+    let viewerUrl = "https://miosdv.apps-dev.hbp.eu/index.html?bucket=https://tar-svc-test.apps.hbp.eu/fakebucket/?url=https://data-proxy.ebrains.eu/api/v1/buckets/"
+    viewerUrl += bucketName
+    viewerUrl += "?prefix=.nesysWorkflowFiles/zippedPyramids/"
+    viewerUrl += title
+    window.open(viewerUrl, "_blank")
+  }
+
+
 
   React.useEffect(() => {
     // console.log('useEffect')
@@ -254,23 +313,8 @@ function App() {
                 dataSource={dataSource}
                 targetKeys={targetKeys}
                 showSearch
-                render={item => (
-                  <div>
-                    {item.disabled && <>
-                      <Tooltip  placement="left" title="This item is disabled for pyNutil since it doesn't have an associated segmentation from webIlastik. You can still open it in the viewer.">
-                    <span>{item.title}</span>
-                    </Tooltip>
-                    </>
-                    }
-                    {!item.disabled && <>
-                      <span>{item.title}</span>
-
-                    </>}
-                    <Button  size="small" style={{ float: 'right' }} onClick={e => { e.stopPropagation(); openLocaliZoomHandler(item.title) }}>LocaliZoom</Button>
-
-
-                  </div>
-                )}                listStyle={{ width: '20rem', height: 400 }}
+                render={item => <ItemRenderer item={item} />}
+                              listStyle={{ width: '20rem', height: 400 }}
                 locale={{ itemUnit: 'brains', itemsUnit: 'brains', searchPlaceholder: 'Search brains' }}
                 // titles={['Available Brains', 'Brains to Process']}
                 onChange={onChange}
