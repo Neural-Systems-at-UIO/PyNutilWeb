@@ -75,7 +75,7 @@ def index():
 @app.route("/list_bucket_content", methods=["POST"])
 def list_bucket_content():
     bucket_name = request.args.get("clb-collab-id")
-    path = request.args.get("path")
+    path = request.args.get("file_path")
     url = f"https://data-proxy.ebrains.eu/api/v1/buckets/{bucket_name}?prefix={path}&delimiter=%2F&limit=50"
     response = requests.get(url)
     if response.ok:

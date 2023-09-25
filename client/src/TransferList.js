@@ -156,7 +156,8 @@ const versionsData = [
   },
 ];
 const DownloadAnalysis = (title) => {
-  let downloadUrl = process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL + "/download_analysis?bucketName=" + props.bucketName + "&file_path=" + title;
+  let downloadUrl = process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL + "/download_file?clb-collab-id=" + props.bucketName + "&file_path=" + title;
+  console.log(downloadUrl)
   // request zip from server
   fetch(downloadUrl, {
     method: 'GET',
