@@ -83,6 +83,21 @@ def list_bucket_content():
     else:
         return response
 
+@app.route("/download_file", methods=["GET"])
+def download_file():
+    # get all the files that are present in permanent_storage
+    bucket_name = request.args.get("clb-collab-id")
+    file_path = request.args.get("file_path")
+    path = 'permanent_storage/' + bucket_name + '/' + file_path
+    # store folder as zip
+    if os.path.isdir(path):
+        print('is dir')
+        os.system(f"zip -r {path}.zip {path}")
+        path = path + '.zip'
+    # download file
+    with open(path, 'rb') as f:
+        data = f.read()
+    return data
 
 @app.route("/process_brains", methods=["GET"])
 def process_brains():
@@ -147,11 +162,17 @@ def get_upload_link(bucket_name, save_path, token):
     print(f"request_url: {request_url}"
           f"headers: {headers}")
     response = requests.put(request_url, headers=headers)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(e)
+        return None
     return response
 
 def upload_file_to_bucket(bucket_name, file_path, save_path, token):
     url = get_upload_link(bucket_name, save_path, token)
+    if url is None:
+        return None
     print(url.json())
     url = url.json()["url"]
     headers = {

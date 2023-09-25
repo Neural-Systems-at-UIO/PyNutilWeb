@@ -155,6 +155,38 @@ const versionsData = [
     status: 'Active',
   },
 ];
+const DownloadAnalysis = (title) => {
+  let downloadUrl = process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL + "/download_analysis?bucketName=" + props.bucketName + "&file_path=" + title;
+  // request zip from server
+  fetch(downloadUrl, {
+    method: 'GET',
+  
+  })
+  .then(response => response.blob())
+  .then(blob => {
+    // Create blob link to download
+    const url = window.URL.createObjectURL(
+      new Blob([blob]),
+    );
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute(
+      'download',
+      `${title}.zip`,
+    );
+    // Append to html link element page
+    document.body.appendChild(link);
+    // Start download
+    link.click();
+    // Clean up and remove the link
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  })
+  .catch(error => {
+    console.error('Error downloading analysis:', error);
+  });
+};
+
 const openMeshViewHandler = (title) => {
   let meshviewUrl = "https://meshview.apps.hbp.eu/?atlas=ABA_Mouse_CCFv3_2017_25um&cloud=https://data-proxy.ebrains.eu/api/v1/buckets/"
   meshviewUrl += props.bucketName
@@ -181,7 +213,9 @@ const itemRenderer = (item) => (
       <div style={{ position: 'absolute', right: 0 }}>
         <Button size="small" style={{ marginRight: '10px' }} onClick={() => openMeshViewHandler(item.title)}>MeshView</Button>
         {/* <Popover placement='right' trigger='click' content={<VersionsTable versions={versionsData} title={item.title}/>}> */}
-        <Button size="small" style={{ marginRight: '10px' }} icon={<DownloadOutlined />}></Button>
+        <Button size="small" style={{ marginRight: '10px' }} icon={<DownloadOutlined />} onClick={
+          () => DownloadAnalysis(item.title)
+        }></Button>
         {/* </Popover> */}
 
       </div>

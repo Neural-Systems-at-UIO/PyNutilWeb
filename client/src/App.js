@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Space, Transfer, Button, Tooltip, Spin, Popover} from 'antd';
+import { Space, Transfer, Button, Tooltip, Spin, Popover, Modal,Progress} from 'antd';
 import OptionsMenu from './OptionsMenu';
 import TransferList from './TransferList';
 import './App.css';
@@ -147,6 +147,7 @@ function App() {
     console.log('targetKeys:', nextTargetKeys)
     setTargetKeys(nextTargetKeys);
   };
+  const [visible, setVisible] = useState(false);
 
   const onClick = () => {
     let newProcessedDataSource = [];
@@ -181,9 +182,12 @@ function App() {
       })
       newProcessedDataSource = [...newProcessedDataSource, ...PPODataSource];
 
+
+
+
     }
 
-    
+          
     
     setProcessedDataSource(processedDataSource => [...processedDataSource, ...newProcessedDataSource]);
     setTargetKeys([]);
@@ -200,8 +204,16 @@ function App() {
       }
       })
       .catch(error => console.error(error));
+    // Show loading dialog
+    setVisible(true);
+    console.log('visible', visible)
+      // Hide loading dialog after 45 seconds
 
-  }
+    setTimeout(() => {
+      setVisible(false);
+    }, 45000);
+
+}
   
 
 
@@ -268,7 +280,18 @@ const ItemRenderer = ({ item }) => {
     window.open(viewerUrl, "_blank")
   }
 
-
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    let intervalId;
+    if (visible) {
+      intervalId = setInterval(() => {
+        setProgress((prevProgress) => prevProgress + 1);
+      }, 1000);
+    } else {
+      setProgress(0);
+    }
+    return () => clearInterval(intervalId);
+  }, [visible]);
 
   React.useEffect(() => {
     // console.log('useEffect')
@@ -292,12 +315,41 @@ const ItemRenderer = ({ item }) => {
     )
   }
 
+
+
   
   else {
     return (
       <div className="App">
+
         <header className="App-header"></header>
         <div className="center">
+        <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
+      <Modal
+        open={visible}
+        title="Processing Brains"
+        closable={false}
+        centered
+
+        footer={null}
+
+      >
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '20rem' , gap:'5rem'}}>
+          <Spin size="large" style={{ marginBottom: '2rem' }}>
+            <h1 style={{ marginTop: '6rem', marginBottom: '6rem' }}>Processing Brains</h1>
+            <div className="content" style={{ padding: '1rem' }} />
+            <Progress percent={Math.round(progress * 100 / 43)} style={{ marginTop: '2rem' }} />
+          </Spin>
+        </div>
+      </Modal>
+      </div>
           <Space direction="vertical" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
 
             <Space direction='horizontal' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' ,  width:'100%' }}>
