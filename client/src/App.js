@@ -1,9 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Space, Transfer, Button, Tooltip, Spin, Popover, Modal,Progress} from 'antd';
+import { Space, Transfer, Button, Tooltip, Spin, Popover, Modal,Progress, List} from 'antd';
 import OptionsMenu from './OptionsMenu';
 import TransferList from './TransferList';
 import './App.css';
+import io from 'socket.io-client';
+
 import getToken from './authenticationUtilities'
+const { v4: uuidv4 } = require('uuid');
+
+const socket = io('https://localhost:8080');
+
+socket.on('connect', () => {
+  console.log('Connected to server');
+});
+
+
+
 
 const Loading = () => {
   return (
@@ -59,7 +71,7 @@ function App() {
     console.log('bucketName: ', bucketName)
     let data1 = ListBucketObjects(bucketName, '.nesysWorkflowFiles/alignmentJsons/')
     let data2 = ListBucketObjects(bucketName, '.nesysWorkflowFiles/ilastikOutputs/')
-
+    
     Promise.all([data1, data2]).then(([result1, result2]) => {
       // remove all files from file1 that do not end in waln
       result1.objects = result1.objects.filter((file) => file.name.endsWith('.waln'))
@@ -117,7 +129,104 @@ function App() {
       })
 
       setDataSource(tempDataSource)
+
+      // now set all targets
+      let finishedBrains = ListBucketObjects(bucketName, '.nesysWorkflowFiles/pointClouds/')
+      let newProcessedDataSource = [];
+      finishedBrains.then((result) => {
+        for (let dir of result.objects) {
+          console.log('dir', dir)
+          if (dir.subdir) {
+          let subdir = ListBucketObjects(bucketName, dir.subdir);
+          let data_title = dir.subdir.replace('.nesysWorkflowFiles/pointClouds/', '')
+          // remove the last element
+          data_title = data_title.substring(0, data_title.length - 1)
+          subdir.then((secondResult) => {
+            console.log('secondResult', secondResult)
+            for (let file of secondResult.objects) {
+
+            if (file.subdir) {
+              let subsubdir = ListBucketObjects(bucketName, file.subdir);
+              subsubdir.then((thirdResult) => {
+                for (let subfile of thirdResult.objects) {
+                  if (subfile.subdir) {
+                    console.log('subfile', subfile)
+                    let path_info = subfile.subdir.split('/')
+                    // get the second last element
+                    let atlas = path_info[path_info.length - 2]
+                    let method = path_info[path_info.length - 3]
+                    let update = {}
+                    if (method == "per_pixel") {
+                      // key should be random uuid
+                      
+                      update = {
+                            key: `${data_title}_${atlas}_PPP`,
+                            title: data_title,
+                            description: "placeholder",
+                            method: 'PPP',
+                            minObjectSize: '',
+                            status: 'completed',
+                            atlas: atlas
+                          }
+                        }
+                    else {
+                      let minObjectSize = method.split('_').pop()
+                      // remove the last 2 elements
+                      minObjectSize = minObjectSize.substring(0, minObjectSize.length - 2)
+                      update = {
+                        key: `${data_title}_${atlas}_PPO_${minObjectSize}`,
+                        title: data_title,
+                        description: "placeholder",
+                        method: 'PPO',
+                        minObjectSize: minObjectSize,
+                        status: 'completed',
+                        atlas: atlas
+                      }
+                    }
+                    newProcessedDataSource = [...newProcessedDataSource, update];
+                    // remove duplicate keys
+            
+                    setProcessedDataSource(newProcessedDataSource)
+                  }
+                }
+              });
+            }
+          }
+          });
+        }
+        }
+      });
+
     })
+                  // if (file.subdir === ".nesysWorkflowFiles/pointClouds/per_pixel") {
+              //   let update = {
+              //     key: data_title,
+              //     title: data_title,
+              //     description: "placeholder",
+              //     method: 'PPP',
+              //     minObjectSize: '',
+              //     status: 'completed',
+              //     atlas: targetAtlas
+              //   }
+              // }
+            // if (file.subdir === ".nesysWorkflowFiles/pointClouds/per_object") {
+            //   // split on / and get the last element
+            //   let minObjectSize = file.subdir.split('/').pop()
+            //   let update = {
+            //     key: data_title,
+            //     title: data_title,
+            //     description: "placeholder",
+            //     method: 'PPO',
+            //     minObjectSize: minObjectSize,
+            //     status: 'completed',
+            //     atlas: targetAtlas
+            //   }
+            // }
+
+      // }
+      // });
+
+    // })
   }, [bucketName])
 
   function handleTokenReceived(token) {
@@ -155,12 +264,12 @@ function App() {
       let PPPDataSource = targetKeys.map(key => dataSource[parseInt(key) - 1]);
       PPPDataSource= PPPDataSource.map(obj => {
         return {
-          key: obj.key,
+          key: `${obj.title}_${targetAtlas}_PPP`,
           title: obj.title,
           description: obj.description,
           method: 'PPP',
           minObjectSize: '',
-          status: 'queued',
+          status: 'Complete',
           atlas: targetAtlas
         }
       })
@@ -171,7 +280,7 @@ function App() {
       PPODataSource = PPODataSource.map(obj => {
         return {
           // add 99000 to key to differentiate from PPP
-          key: obj.key + 99000,
+          key: `${obj.title}_${targetAtlas}_PPO_${minObjectSize}`,
           title: obj.title,
           description: obj.description,
           method: 'PPO',
@@ -187,9 +296,12 @@ function App() {
 
     }
 
-          
-    
-    setProcessedDataSource(processedDataSource => [...processedDataSource, ...newProcessedDataSource]);
+    newProcessedDataSource = [...processedDataSource, ...newProcessedDataSource]
+    // remove duplicate keys
+    newProcessedDataSource = [...new Set(newProcessedDataSource.map(obj => obj.key))].map(key => {
+      return newProcessedDataSource.find(obj => obj.key === key)
+    })
+    setProcessedDataSource(newProcessedDataSource);
     setTargetKeys([]);
     let brains = newProcessedDataSource.map(obj => obj.title).join(',');
     // remove duplicates
@@ -208,10 +320,19 @@ function App() {
     setVisible(true);
     console.log('visible', visible)
       // Hide loading dialog after 45 seconds
+    socket.on('message', (data) => {
+      console.log('Received message:', data);
 
-    setTimeout(() => {
-      setVisible(false);
-    }, 45000);
+      if (data === 'Finished') {
+        setVisible(false);
+      }
+      else {
+        setProgress(
+          parseInt(data)
+        )
+      }
+
+    });
 
 }
   
@@ -282,15 +403,11 @@ const ItemRenderer = ({ item }) => {
 
   const [progress, setProgress] = useState(0);
   useEffect(() => {
-    let intervalId;
     if (visible) {
-      intervalId = setInterval(() => {
-        setProgress((prevProgress) => prevProgress + 1);
-      }, 1000);
     } else {
       setProgress(0);
     }
-    return () => clearInterval(intervalId);
+     
   }, [visible]);
 
   React.useEffect(() => {
@@ -322,7 +439,11 @@ const ItemRenderer = ({ item }) => {
     return (
       <div className="App">
 
-        <header className="App-header"></header>
+        <header className="App-header">
+
+                  {/* place the image nutilweblogo.png at the top right of the page */}
+
+        </header>
         <div className="center">
         <div
         style={{
@@ -332,6 +453,7 @@ const ItemRenderer = ({ item }) => {
           height: '100vh',
         }}
       >
+
       <Modal
         open={visible}
         title="Processing Brains"
@@ -350,6 +472,7 @@ const ItemRenderer = ({ item }) => {
         </div>
       </Modal>
       </div>
+
           <Space direction="vertical" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
 
             <Space direction='horizontal' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' ,  width:'100%' }}>
@@ -379,7 +502,14 @@ const ItemRenderer = ({ item }) => {
                 bucketName={bucketName}
               />
             </Space>
-            <div style={{display:'flex', width:'72.5rem',flexDirection:'column', alignItems:'center', backgroundColor:'#F9F6EE',  border: '2px solid black' , gap: '1rem', borderRadius: '10px', padding:'1rem'}}>
+            <Space>
+ 
+            </Space>
+            <div style={{display:'flex', width:'72.5rem',flexDirection:'column', alignItems:'center', backgroundColor:'#F9F6EE',  border: '2px solid black' ,  borderRadius: '10px'}}>
+            <Space direction='horizontal'>
+            <div
+            style={{display:'flex', flexDirection:'column', alignItems:'center', gap: '1rem',padding:'1rem' }}
+            >
               <h2 style={{margin:0}}>Settings</h2>
             <OptionsMenu
               setMinObjectSize={setMinObjectSize}
@@ -388,6 +518,8 @@ const ItemRenderer = ({ item }) => {
               pointPerObject={pointPerObject}
               setTargetAtlas={setTargetAtlas}
             />
+
+
             <Space>
               {isButtonDisabled ? (
                 <Tooltip placement="bottom" title="You must have brains in the 'Brains to process' menu and a point calculation method selected before proceeding" >
@@ -404,7 +536,15 @@ const ItemRenderer = ({ item }) => {
               )}
             </Space>
             </div>
+
+            <div width='30%'>
+    <img src="nutil_logo.png" alt="nutilweblogo" style={{ width: '10rem', height: 'auto' }} />        
+    </div>
+    </Space>
+            </div>
+
           </Space>
+
         </div>
       </div>
     );

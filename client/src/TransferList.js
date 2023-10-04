@@ -88,75 +88,20 @@ const VersionsTable = ({ versions, title }) => {
     //           <td>{version.status}</td>
     //         </tr>
     //       ))}
-    //     </tbody>
+    //     </tbody>W
     //   </table>
     // </div>
   );
 };
-const versionsData = [
-  {
-    id: 1,
-    type: 'Point Per Object',
-    minObjectSize: '10px',
-    status: 'Complete',
-  },
-  {
-    id: 2,
-    type: 'Point Per Pixel',
-    minObjectSize: 'NA',
-    status: 'Processing',
-  },
-  {
-    id: 3,
-    type: 'Point Per Object',
-    minObjectSize: '30px',
-    status: 'Complete',
-  },
-  {
-    id: 4,
-    type: 'Point Per Pixel',
-    minObjectSize: '20px',
-    status: 'Inactive',
-  },
-  {
-    id: 5,
-    type: 'Point Per Object',
-    minObjectSize: '15px',
-    status: 'Active',
-  },
-  {
-    id: 6,
-    type: 'Point Per Pixel',
-    minObjectSize: '25px',
-    status: 'Inactive',
-  },
-  {
-    id: 7,
-    type: 'Point Per Object',
-    minObjectSize: '20px',
-    status: 'Active',
-  },
-  {
-    id: 8,
-    type: 'Point Per Pixel',
-    minObjectSize: '30px',
-    status: 'Complete',
-  },
-  {
-    id: 9,
-    type: 'Point Per Object',
-    minObjectSize: '25px',
-    status: 'Inactive',
-  },
-  {
-    id: 10,
-    type: 'Point Per Pixel',
-    minObjectSize: '15px',
-    status: 'Active',
-  },
-];
-const DownloadAnalysis = (title) => {
-  let downloadUrl = process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL + "/download_file?clb-collab-id=" + props.bucketName + "&file_path=" + title;
+
+const DownloadAnalysis = (title,method, minObjectSize, atlas) => {
+  let method_string;
+  if (method === 'PPO') {
+    method_string =  minObjectSize + 'px'
+  } else if (method === 'PPP') {
+    method_string = 'point_per_pix'
+  }
+  let downloadUrl = process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL + "/download_file?clb-collab-id=" + props.bucketName + "&title=" + title + "&method=" + method_string + "&atlas=" + atlas ;
   console.log(downloadUrl)
   // request zip from server
   fetch(downloadUrl, {
@@ -173,7 +118,7 @@ const DownloadAnalysis = (title) => {
     link.href = url;
     link.setAttribute(
       'download',
-      `${title}.zip`,
+      `${title}_${method_string}_${atlas}.zip`,
     );
     // Append to html link element page
     document.body.appendChild(link);
@@ -188,13 +133,16 @@ const DownloadAnalysis = (title) => {
   });
 };
 
-const openMeshViewHandler = (title) => {
-  let meshviewUrl = "https://meshview.apps.hbp.eu/?atlas=ABA_Mouse_CCFv3_2017_25um&cloud=https://data-proxy.ebrains.eu/api/v1/buckets/"
-  meshviewUrl += props.bucketName
-  meshviewUrl += "/.nesysWorkflowFiles/pointClouds/"
-  meshviewUrl += title
-  meshviewUrl += "/objects_meshview.json"
-  window.open(meshviewUrl, "_blank")
+const openMeshViewHandler = (title, method, minObjectSize, atlas) => {
+  let meshviewUrl = `https://meshview.apps.hbp.eu/?atlas=ABA_Mouse_CCFv3_2017_25um&cloud=https://data-proxy.ebrains.eu/api/v1/buckets/${props.bucketName}/.nesysWorkflowFiles/pointClouds/${title}`;
+  console.log(`method: ${method}, minObjectSize: ${minObjectSize}, atlas: ${atlas}, title: ${title}`)
+  if (method === 'PPO') {
+    meshviewUrl += `/min_obj_${minObjectSize}px/${atlas}/objects_meshview.json`;
+  } else if (method === 'PPP') {
+    meshviewUrl += `/per_pixel/${atlas}/pixels_meshview.json`;
+  }
+
+  window.open(meshviewUrl, "_blank");
 }
 const itemRenderer = (item) => (
   <>
@@ -212,10 +160,10 @@ const itemRenderer = (item) => (
       <div style={{ fontWeight: 'bold', marginRight: '10px', minWidth: '2rem'}}>{item.atlas}</div>
 
       <div style={{ position: 'absolute', right: 0 }}>
-        <Button size="small" style={{ marginRight: '10px' }} onClick={() => openMeshViewHandler(item.title)}>MeshView</Button>
+        <Button size="small" style={{ marginRight: '10px' }} onClick={() => openMeshViewHandler(item.title, item.method, item.minObjectSize, item.atlas)}>MeshView</Button>
         {/* <Popover placement='right' trigger='click' content={<VersionsTable versions={versionsData} title={item.title}/>}> */}
         <Button size="small" style={{ marginRight: '10px' }} icon={<DownloadOutlined />} onClick={
-          () => DownloadAnalysis(item.title)
+          () => DownloadAnalysis(item.title, item.method, item.minObjectSize, item.atlas)
         }></Button>
         {/* </Popover> */}
 

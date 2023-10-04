@@ -5,12 +5,13 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from download_functions import download_brains
 from waitress import serve
-
+from flask_socketio import SocketIO
 from datetime import datetime
 app = Flask(__name__, static_folder="../client/build", static_url_path="/")
 CORS(app)
 
 
+socketio = SocketIO(app, cors_allowed_origins="*")
 app.config["pynutil"] = None
 if os.getenv("FLASK_ENV") == "development":
     load_dotenv()
@@ -26,6 +27,17 @@ for key, value in os.environ.items():
 #     )
 
 
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
+    socketio.emit('message', 'Hello, server!');
+
+
+@socketio.on('message')
+def handle_message(data):
+    print('Received message:', data)
+    socketio.emit('message', data)
 
 
 def get_token(code):
@@ -87,15 +99,17 @@ def list_bucket_content():
 def download_file():
     # get all the files that are present in permanent_storage
     bucket_name = request.args.get("clb-collab-id")
-    file_path = request.args.get("file_path")
-    path = 'permanent_storage/' + bucket_name + '/' + file_path
+    title = request.args.get("title")
+    method = request.args.get("method")
+    atlas = request.args.get("atlas")
+    path = 'permanent_storage/' + bucket_name + '/' + title + '/' + method + '/' + atlas 
+    print(f"path: {path}")
     # store folder as zip
     if os.path.isdir(path):
         print('is dir')
-        os.system(f"zip -r {path}.zip {path}")
-        path = path + '.zip'
+        os.system(f"zip -rj {title}_{method}_{atlas}.zip {path}")
     # download file
-    with open(path, 'rb') as f:
+    with open(f"{title}_{method}_{atlas}.zip", 'rb') as f:
         data = f.read()
     return data
 
@@ -107,14 +121,16 @@ def process_brains():
     point_per_object = request.args.get("pointPerObject")
     point_per_pixel = request.args.get("pointPerPixel")
     min_object_size = request.args.get("minObjectSize")
+    target_atlas = request.args.get("targetAtlas")
     # get the token from the auth header
     token = eval(request.headers.get("Authorization"))
     token = f"Bearer {token}"
     print(f"token: {token}")
+    print(f"target_atlas: {target_atlas}")
 
     download_brains(bucket_name, brains)
     pnt = PyNutil.PyNutil(
-        volume_path="allen2017",
+        volume_path=target_atlas,
         segmentation_folder="",
         alignment_json="",
         colour="auto",
@@ -126,34 +142,59 @@ def process_brains():
     elif point_per_object and point_per_pixel:
         method = "all"
     print(f"brains: {brains}")
-    for brain in brains:
+    total = len(brains) * 4
+    current = 0
+    for index, brain in enumerate(brains):
         pnt.segmentation_folder = f"permanent_storage/{bucket_name}/{brain}/"
         pnt.alignment_json = f"permanent_storage/{bucket_name}/{brain}/{brain}.waln"
         pnt.colour = None
         pnt.get_coordinates(object_cutoff=int(min_object_size), method=method)
-        pnt.quantify_coordinates()
-        pnt.save_analysis(f"permanent_storage/{bucket_name}/{brain}")
-        target_folder = f".nesysWorkflowFiles/pointClouds/{brain}/objects_meshview.json"
-        file_path =f"permanent_storage/{bucket_name}/{brain}/whole_series_meshview/objects_meshview.json"
-
-        upload_file_to_bucket(bucket_name, file_path, target_folder, token)
-        target_folder = f".nesysWorkflowFiles/Quantification/{brain}/counts.csv"
-        file_path = f"permanent_storage/{bucket_name}/{brain}/whole_series_report/counts.csv"
-        upload_file_to_bucket(bucket_name,  file_path, target_folder,token)
+        current += 1
+        out_value = current/total * 100
+        socketio.emit('message', out_value)
         target_folder = f".nesysWorkflowFiles/alignmentJsons/{brain}.json"
+        pnt.quantify_coordinates()
+        if point_per_object:
+            savepath = f"permanent_storage/{bucket_name}/{brain}/{min_object_size}px/{target_atlas}/"
+            if not os.path.exists(savepath):
+                os.makedirs(savepath)
+            pnt.save_analysis(savepath)
+            target_folder = f".nesysWorkflowFiles/pointClouds/{brain}/min_obj_{min_object_size}px/{target_atlas}/objects_meshview.json"
+            file_path =f"{savepath}/whole_series_meshview/objects_meshview.json"
+            upload_file_to_bucket(bucket_name, file_path, target_folder, token)
+            target_folder = f".nesysWorkflowFiles/Quantification/{brain}/min_obj_{min_object_size}px/{target_atlas}/counts.csv"
+            file_path = f"{savepath}/whole_series_report/counts.csv"
+            upload_file_to_bucket(bucket_name, file_path, target_folder, token)
+
+        current += 1
+        out_value = current/total * 100
+        socketio.emit('message', out_value)
+
+        if point_per_pixel:
+            savepath = f"permanent_storage/{bucket_name}/{brain}/point_per_pix/{target_atlas}/"
+            if not os.path.exists(savepath):
+                os.makedirs(savepath)
+            pnt.save_analysis(savepath)
+            target_folder = f".nesysWorkflowFiles/pointClouds/{brain}/per_pixel/{target_atlas}/pixels_meshview.json"
+            file_path = f"{savepath}/whole_series_meshview/pixels_meshview.json"
+            upload_file_to_bucket(bucket_name, file_path, target_folder, token)
+            target_folder = f".nesysWorkflowFiles/Quantification/{brain}/point_per_pix/{target_atlas}/counts.csv"
+            file_path = f"{savepath}/whole_series_report/counts.csv"
+            upload_file_to_bucket(bucket_name, file_path, target_folder, token)
+        current += 1
+        out_value = current/total * 100
+        socketio.emit('message', out_value)
+
+ 
 
         file_path = f"permanent_storage/{bucket_name}/{brain}/{brain}.json"
         upload_file_to_bucket(bucket_name,  file_path, target_folder,token)
         delete_path = f"permanent_storage/{bucket_name}/{brain}/segmentations"
         os.system(f"rm -rf {delete_path}")
+        current += 1
+        socketio.emit('message', current/total)
+    socketio.emit('message', f"Finished")
     
-    # upload results to bucket
-
-    print(f"point_per_object: {point_per_object}")
-    print(f"point_per_pixel: {point_per_pixel}")
-    print(f"min_object_size: {min_object_size}")
-    print(f"brains: {brains}")
-    print(f"bucket_name: {bucket_name}")
     return "ok"
 
 def get_upload_link(bucket_name, save_path, token):
