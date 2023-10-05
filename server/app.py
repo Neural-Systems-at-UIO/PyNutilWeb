@@ -13,7 +13,7 @@ app = Flask(__name__, static_folder="../client/build", static_url_path="/")
 CORS(app)
 
 
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 app.config["pynutil"] = None
 if os.getenv("FLASK_ENV") == "development":
     load_dotenv()
