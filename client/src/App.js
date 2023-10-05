@@ -8,7 +8,7 @@ import io from 'socket.io-client';
 import getToken from './authenticationUtilities'
 const { v4: uuidv4 } = require('uuid');
 
-const socket = io('https://localhost:8080');
+const socket = io(process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL);
 
 socket.on('connect', () => {
   console.log('Connected to server');
