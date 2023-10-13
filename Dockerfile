@@ -2,7 +2,8 @@
 FROM python:3.11.5-bookworm
 # Install nodejs
 RUN apt-get update && apt-get install -y npm
-
+# install zip
+RUN apt-get install -y zip
 # Install react
 #RUN npm install react
 # Make app directory in container
@@ -40,6 +41,6 @@ EXPOSE 8080
 WORKDIR /app/server
 
 #set the permissions on app/server/permanent_storage to drwxrwxrwx
-RUN chmod 777 permanent_storage
+RUN chmod -R 777 permanent_storage
 # Run app.py when the container launches
-CMD ["python", "app.py"]
+CMD ["bash", "-c", "FLASK_APP=app.py flask run --host=0.0.0.0 --port=8080"]

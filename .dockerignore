@@ -10,7 +10,7 @@ client/node_modules
 
 # Data folder
 /persistent_storage
-
+# /server/permanent_storage
 # Environment variables
 .env
 client/.env

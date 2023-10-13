@@ -1,10 +1,10 @@
-from flask import Flask, jsonify, render_template, redirect, request, abort,url_for
+from flask import Flask, jsonify, redirect, request, abort
 from PyNutil import PyNutil
-import os, requests
+import os
+import requests
 from flask_cors import CORS
 from dotenv import load_dotenv
 from download_functions import download_brains
-from waitress import serve
 from flask_socketio import SocketIO
 from datetime import datetime
 
@@ -13,7 +13,7 @@ app = Flask(__name__, static_folder="../client/build", static_url_path="/")
 CORS(app)
 
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*")
 app.config["pynutil"] = None
 if os.getenv("FLASK_ENV") == "development":
     load_dotenv()
@@ -21,7 +21,7 @@ if os.getenv("FLASK_ENV") == "development":
 # console log all of the env variables
 for key, value in os.environ.items():
     print(f"{key}: {value}")
-    
+
 # In the future we will load all the Atlases here and store them in the app context
 # with app.app_context():
 #     app.config['pynutil'] = PyNutil.PyNutil(
@@ -29,17 +29,16 @@ for key, value in os.environ.items():
 #     )
 
 
-
-@socketio.on('connect')
+@socketio.on("connect")
 def handle_connect():
-    print('Client connected')
-    socketio.emit('message', 'Hello, server!');
+    print("Client connected")
+    socketio.emit("message", "Hello, server!")
 
 
-@socketio.on('message')
+@socketio.on("message")
 def handle_message(data):
-    print('Received message:', data)
-    socketio.emit('message', data)
+    print("Received message:", data)
+    socketio.emit("message", data)
 
 
 def get_token(code):
@@ -76,10 +75,8 @@ def auth():
 
 @app.route("/")
 def index():
-
     if os.getenv("FLASK_ENV") == "development":
         query_params = request.query_string.decode("utf-8")
-        print
         redirect_url = f"http://localhost:3000?{query_params}"
         return redirect(redirect_url)
     else:
@@ -97,6 +94,7 @@ def list_bucket_content():
     else:
         return response
 
+
 @app.route("/download_file", methods=["GET"])
 def download_file():
     # get all the files that are present in permanent_storage
@@ -104,24 +102,25 @@ def download_file():
     title = request.args.get("title")
     method = request.args.get("method")
     atlas = request.args.get("atlas")
-    path = 'permanent_storage/' + bucket_name + '/' + title + '/' + method + '/' + atlas 
+    path = "permanent_storage/" + bucket_name + "/" + title + "/" + method + "/" + atlas
     print(f"path: {path}")
     # store folder as zip
     if os.path.isdir(path):
-        print('is dir')
+        print("is dir")
         os.system(f"zip -rj {title}_{method}_{atlas}.zip {path}")
     # download file
-    with open(f"{title}_{method}_{atlas}.zip", 'rb') as f:
+    with open(f"{title}_{method}_{atlas}.zip", "rb") as f:
         data = f.read()
     return data
+
 
 @app.route("/process_brains", methods=["GET"])
 def process_brains():
     bucket_name = request.args.get("clb-collab-id")
     brains = request.args.get("brains")
     brains = brains.split(",")
-    point_per_object = request.args.get("pointPerObject")
-    point_per_pixel = request.args.get("pointPerPixel")
+    point_per_object = request.args.get("pointPerObject") == 'true'
+    point_per_pixel = request.args.get("pointPerPixel") == 'true'
     min_object_size = request.args.get("minObjectSize")
     target_atlas = request.args.get("targetAtlas")
     # get the token from the auth header
@@ -129,6 +128,8 @@ def process_brains():
     token = f"Bearer {token}"
     print(f"token: {token}")
     print(f"target_atlas: {target_atlas}")
+    print(f"point_per_object: {point_per_object}")
+    print(f"point_per_pixel: {point_per_pixel}")
 
     download_brains(bucket_name, brains)
     pnt = PyNutil.PyNutil(
@@ -137,6 +138,7 @@ def process_brains():
         alignment_json="",
         colour="auto",
     )
+    
     if point_per_object and not point_per_pixel:
         method = "per_object"
     elif point_per_pixel and not point_per_object:
@@ -152,8 +154,8 @@ def process_brains():
         pnt.colour = None
         pnt.get_coordinates(object_cutoff=int(min_object_size), method=method)
         current += 1
-        out_value = current/total * 100
-        socketio.emit('message', out_value)
+        out_value = current / total * 100
+        socketio.emit("message", out_value)
         target_folder = f".nesysWorkflowFiles/alignmentJsons/{brain}.json"
         pnt.quantify_coordinates()
         if point_per_object:
@@ -162,18 +164,20 @@ def process_brains():
                 os.makedirs(savepath)
             pnt.save_analysis(savepath)
             target_folder = f".nesysWorkflowFiles/pointClouds/{brain}/min_obj_{min_object_size}px/{target_atlas}/objects_meshview.json"
-            file_path =f"{savepath}/whole_series_meshview/objects_meshview.json"
+            file_path = f"{savepath}/whole_series_meshview/objects_meshview.json"
             upload_file_to_bucket(bucket_name, file_path, target_folder, token)
             target_folder = f".nesysWorkflowFiles/Quantification/{brain}/min_obj_{min_object_size}px/{target_atlas}/counts.csv"
             file_path = f"{savepath}/whole_series_report/counts.csv"
             upload_file_to_bucket(bucket_name, file_path, target_folder, token)
 
         current += 1
-        out_value = current/total * 100
-        socketio.emit('message', out_value)
+        out_value = current / total * 100
+        socketio.emit("message", out_value)
 
         if point_per_pixel:
-            savepath = f"permanent_storage/{bucket_name}/{brain}/point_per_pix/{target_atlas}/"
+            savepath = (
+                f"permanent_storage/{bucket_name}/{brain}/point_per_pix/{target_atlas}/"
+            )
             if not os.path.exists(savepath):
                 os.makedirs(savepath)
             pnt.save_analysis(savepath)
@@ -184,26 +188,30 @@ def process_brains():
             file_path = f"{savepath}/whole_series_report/counts.csv"
             upload_file_to_bucket(bucket_name, file_path, target_folder, token)
         current += 1
-        out_value = current/total * 100
-        socketio.emit('message', out_value)
-
- 
+        out_value = current / total * 100
+        socketio.emit("message", out_value)
 
         file_path = f"permanent_storage/{bucket_name}/{brain}/{brain}.json"
-        upload_file_to_bucket(bucket_name,  file_path, target_folder,token)
+        upload_file_to_bucket(bucket_name, file_path, target_folder, token)
         delete_path = f"permanent_storage/{bucket_name}/{brain}/segmentations"
         os.system(f"rm -rf {delete_path}")
         current += 1
-        socketio.emit('message', current/total)
-    socketio.emit('message', f"Finished")
-    
+        socketio.emit("message", current / total)
+    socketio.emit("message", f"Finished")
+
     return "ok"
 
+
 def get_upload_link(bucket_name, save_path, token):
-    request_url = f"https://data-proxy.ebrains.eu/api/v1/buckets/{bucket_name}/{save_path}"
-    headers = {"Authorization": token, "Content-Type": "application/json", 'x-amz-date': datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')}
-    print(f"request_url: {request_url}"
-          f"headers: {headers}")
+    request_url = (
+        f"https://data-proxy.ebrains.eu/api/v1/buckets/{bucket_name}/{save_path}"
+    )
+    headers = {
+        "Authorization": token,
+        "Content-Type": "application/json",
+        "x-amz-date": datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT"),
+    }
+    print(f"request_url: {request_url}" f"headers: {headers}")
     response = requests.put(request_url, headers=headers)
     try:
         response.raise_for_status()
@@ -212,37 +220,31 @@ def get_upload_link(bucket_name, save_path, token):
         return None
     return response
 
+
 def upload_file_to_bucket(bucket_name, file_path, save_path, token):
     url = get_upload_link(bucket_name, save_path, token)
     if url is None:
         return None
     print(url.json())
     url = url.json()["url"]
-    headers = {
-                'x-amz-date': datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
-}
-    
-    print('the request url is: ', url)
+    headers = {"x-amz-date": datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")}
+
+    print("the request url is: ", url)
     with open(file_path, "rb") as f:
         response = requests.put(url, headers=headers, data=f)
     print(response.content)
     return response
 
 
-
-
 # download ilastik files and waln
 @app.route("/test_route/<username>")
 def test_route(username):
     return f"Hello {username}"
-import ssl
 
-print("FLASK_ENV: ", os.getenv("FLASK_ENV"))
-# if __name__ == "__main__":
-#     app.run(debug=True)
+
 if __name__ == "__main__":
     if os.getenv("FLASK_ENV") == "development":
         # set port to 8080
-        app.run(debug=True,ssl_context='adhoc',  port=8080)
+        app.run(debug=True, ssl_context="adhoc", port=8080)
     else:
-        serve(app, host="0.0.0.0", port=8080)
+        app.run(debug=False, host="0.0.0.0", port=8080)
