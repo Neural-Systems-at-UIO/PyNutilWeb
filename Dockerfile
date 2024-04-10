@@ -42,5 +42,7 @@ WORKDIR /app/server
 
 #set the permissions on app/server/permanent_storage to drwxrwxrwx
 RUN chmod -R 777 permanent_storage
+#set the permissions on app/server/permanent_storage to drwxrwxrwx
+RUN chmod -R 777 PyNutil
 # Run app.py when the container launches
 CMD ["bash", "-c", "FLASK_APP=app.py flask run --host=0.0.0.0 --port=8080"]

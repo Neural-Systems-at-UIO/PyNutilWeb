@@ -156,7 +156,6 @@ def process_brains():
         current += 1
         out_value = current / total * 100
         socketio.emit("message", out_value)
-        target_folder = f".nesysWorkflowFiles/alignmentJsons/{brain}.json"
         pnt.quantify_coordinates()
         if point_per_object:
             savepath = f"permanent_storage/{bucket_name}/{brain}/{min_object_size}px/{target_atlas}/"
@@ -190,9 +189,6 @@ def process_brains():
         current += 1
         out_value = current / total * 100
         socketio.emit("message", out_value)
-
-        file_path = f"permanent_storage/{bucket_name}/{brain}/{brain}.json"
-        upload_file_to_bucket(bucket_name, file_path, target_folder, token)
         delete_path = f"permanent_storage/{bucket_name}/{brain}/segmentations"
         os.system(f"rm -rf {delete_path}")
         current += 1
