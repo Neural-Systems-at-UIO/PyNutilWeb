@@ -151,7 +151,6 @@ def process_brains():
     for index, brain in enumerate(brains):
         pnt.segmentation_folder = f"permanent_storage/{bucket_name}/{brain}/"
         pnt.alignment_json = f"permanent_storage/{bucket_name}/{brain}/{brain}.waln"
-        pnt.colour = None
         pnt.get_coordinates(object_cutoff=int(min_object_size), method=method)
         current += 1
         out_value = current / total * 100
