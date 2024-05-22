@@ -1,7 +1,4 @@
 node_modules
 server/permanent_storage
 server/PyNutil
-.env.production
-client/.env.production
-client/.env.local
 client/src/generate_ng_neurons.py
