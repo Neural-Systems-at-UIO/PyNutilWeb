@@ -12,7 +12,4 @@ client/node_modules
 /persistent_storage
 # /server/permanent_storage
 # Environment variables
-.env
-client/.env
-server/.env
 .vscode
