@@ -37,9 +37,9 @@ WORKDIR /app
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
 
+RUN chmod -R 777 server
 # Set the working directory to /app/client
 WORKDIR /app/server
-
 #set the permissions on app/server/permanent_storage to drwxrwxrwx
 RUN chmod -R 777 permanent_storage
 #set the permissions on app/server/permanent_storage to drwxrwxrwx
