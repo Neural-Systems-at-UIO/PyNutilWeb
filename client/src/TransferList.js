@@ -48,7 +48,7 @@ const [selectedItem, setSelectedItem] = useState(null);
   const ButtonColumn = ({ title }) => {
 
     const openLocaliZoomHandler = () => {
-      let localizoomUrl = "https://lz-nl.apps.hbp.eu/collab.php?clb-collab-id="
+      let localizoomUrl = "https://webwarp.apps.ebrains.eu/collab.php?clb-collab-id="
       localizoomUrl += props.bucketName
       localizoomUrl += "&filename=.nesysWorkflowFiles/alignmentJsons/"
       localizoomUrl += title
@@ -134,7 +134,7 @@ const DownloadAnalysis = (title,method, minObjectSize, atlas) => {
 };
 
 const openMeshViewHandler = (title, method, minObjectSize, atlas) => {
-  let meshviewUrl = `https://meshview.apps.hbp.eu/?atlas=ABA_Mouse_CCFv3_2017_25um&cloud=https://data-proxy.ebrains.eu/api/v1/buckets/${props.bucketName}/.nesysWorkflowFiles/pointClouds/${title}`;
+  let meshviewUrl = `https://meshview.apps.ebrains.eu/?atlas=ABA_Mouse_CCFv3_2017_25um&cloud=https://data-proxy.ebrains.eu/api/v1/buckets/${props.bucketName}/.nesysWorkflowFiles/pointClouds/${title}`;
   console.log(`method: ${method}, minObjectSize: ${minObjectSize}, atlas: ${atlas}, title: ${title}`)
   if (method === 'PPO') {
     meshviewUrl += `/min_obj_${minObjectSize}px/${atlas}/objects_meshview.json`;

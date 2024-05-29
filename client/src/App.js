@@ -386,7 +386,7 @@ const ItemRenderer = ({ item }) => {
 };
 
   const openLocaliZoomHandler = (title) => {
-    let localizoomUrl = "https://lz-nl.apps.hbp.eu/collab.php?clb-collab-id="
+    let localizoomUrl = "https://webwarp.apps.ebrains.eu/collab.php?clb-collab-id="
     localizoomUrl += bucketName
     localizoomUrl += "&filename=.nesysWorkflowFiles/alignmentJsons/"
     localizoomUrl += title
@@ -394,7 +394,7 @@ const ItemRenderer = ({ item }) => {
     window.open(localizoomUrl, "_blank")
   }
   const openMioViewer = (title) => {
-    let viewerUrl = "https://miosdv.apps-dev.hbp.eu/index.html?bucket=https://tar-svc-test.apps.hbp.eu/fakebucket/?url=https://data-proxy.ebrains.eu/api/v1/buckets/"
+    let viewerUrl = "https://dzseriesviewer.apps.ebrains.eu/index.html?bucket=https://dzip-svc.apps.ebrains.eu/fakebucket/?url=https://data-proxy.ebrains.eu/api/v1/buckets/"
     viewerUrl += bucketName
     viewerUrl += "?prefix=.nesysWorkflowFiles/zippedPyramids/"
     viewerUrl += title

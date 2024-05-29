@@ -8,5 +8,5 @@ client/src/generate_ng_neurons.py
 server/.env
 client/.env
 .env
-server/.env
 server/__pycache__/app.cpython-311.pyc
+
