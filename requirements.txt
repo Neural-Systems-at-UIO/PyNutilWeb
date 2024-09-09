@@ -14,3 +14,5 @@ waitress==2.1.2
 xmltodict==0.13.0
 flask-socketio==5.3.6
 eventlet==0.33.3
+brainglobe-atlasapi
+cryptography
