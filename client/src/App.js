@@ -9,7 +9,7 @@ import getToken from './authenticationUtilities'
 const { v4: uuidv4 } = require('uuid');
 
 const socket = io(process.env.REACT_APP_OIDC_CLIENT_REDIRECT_URL);
-
+console.log('redirect value: ', process.env)
 socket.on('connect', () => {
   console.log('Connected to server');
 });
