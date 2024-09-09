@@ -22,7 +22,7 @@ python app.py
 ```
 exit folder and cd into PyNutilWeb/client
 
-create another  file called .env.local with the same values as the previous .env file
+create another  file called .env.test.local with the same values as the previous .env file
 
 run 
 ```
