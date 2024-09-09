@@ -16,6 +16,8 @@ REACT_APP_WORKBENCH_OIDC_CLIENT_ID = value
 REACT_APP_OIDC_CLIENT_REDIRECT_URL = value
 REACT_APP_WORKBENCH_OIDC_CLIENT_SECRET= value
 ```
+make a copy of that .env called .env.test.local ( we need both, I don't know why )
+
 export the following
 ```
 export FLASK_ENV=development
