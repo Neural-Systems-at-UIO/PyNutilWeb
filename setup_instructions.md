@@ -1,10 +1,10 @@
 first clone PyNutil web
 ```bash
-https://github.com/Neural-Systems-at-UIO/PyNutilWeb
+git clone https://github.com/Neural-Systems-at-UIO/PyNutilWeb
 ```
 cd into server folder and clone pynutil with 
 ```bash
-https://github.com/Neural-Systems-at-UIO/PyNutil
+git clone https://github.com/Neural-Systems-at-UIO/PyNutil
 ```
 create .env file which includes the following values
 ```
