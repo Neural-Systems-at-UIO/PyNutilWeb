@@ -12,13 +12,17 @@ REACT_APP_WORKBENCH_OIDC_CLIENT_ID = value
 REACT_APP_OIDC_CLIENT_REDIRECT_URL = value
 REACT_APP_WORKBENCH_OIDC_CLIENT_SECRET= value
 ```
+export the following
+```
+export FLASK_ENV=development
+```
 run 
 ```
 python app.py
 ```
 exit folder and cd into PyNutilWeb/client
 
-create another .env file with the same values as before
+create another  file called .env.local with the same values as the previous .env file
 
 run 
 ```
