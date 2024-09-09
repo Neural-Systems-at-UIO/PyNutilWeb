@@ -2,7 +2,11 @@ first clone PyNutil web
 ```bash
 git clone https://github.com/Neural-Systems-at-UIO/PyNutilWeb
 ```
-cd into server folder and clone pynutil with 
+cd into server folder
+```bash
+cd PyNutilWeb/server
+```
+and clone pynutil with 
 ```bash
 git clone https://github.com/Neural-Systems-at-UIO/PyNutil
 ```
